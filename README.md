@@ -1,4 +1,7 @@
-﻿# Animated Doors
+﻿![GitHub Downloads (specific asset, latest release)](https://img.shields.io/github/downloads/CePeU/Animated-Doors/latest/Animated-Doors.zip)
+![GitHub Downloads (specific asset, latest release)](https://img.shields.io/github/downloads/CePeU/Animated-Doors/latest/Animated-Doors_1.0.0.zip)
+
+# Animated Doors
 
 Animated Doors is a Dungeondraft mod for marking objects and portals as animated doors, configuring their movement, and previewing them. It exports door artwork and animation settings in Universal VTT (`.dd2vtt`) files for use with a compatible importer. See the [user guide](https://cepeu.github.io/Animated-Doors/) for details and export options.
 
