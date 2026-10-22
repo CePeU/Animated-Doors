@@ -1,0 +1,50 @@
+name: Deploy Release
+
+on:
+  push:
+    branches: ["main"]
+    paths: ["mod.ddmod"]
+  workflow_dispatch:
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      deploy_release: ${{ steps.deploy_release.outputs.deploy_release }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: version
+        run: echo "version=$(jq -r .version mod.ddmod)" >> $GITHUB_OUTPUT
+      - id: deploy_release
+        run: git show-ref --tags --verify --quiet -- "refs/tags/${{ steps.version.outputs.version }}" || echo "deploy_release=true" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: check-version
+    runs-on: ubuntu-latest
+    if: contains(needs.check-version.outputs.deploy_release, 'true')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create versioned folder
+        run: mkdir -p AnimatedDoors_${{ needs.check-version.outputs.version }}
+      - name: Copy files recursively
+        run: cp -r mod.ddmod icons languages scripts AnimatedDoors_${{ needs.check-version.outputs.version }}/
+      - name: Zip Release
+        run: |
+          zip -r AnimatedDoors_${{ needs.check-version.outputs.version }}.zip AnimatedDoors_${{ needs.check-version.outputs.version }}
+          zip -r AnimatedDoors.zip AnimatedDoors_${{ needs.check-version.outputs.version }}
+      - name: Deploy Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ needs.check-version.outputs.version }}
+          tag_name: ${{ needs.check-version.outputs.version }}
+          prerelease: ${{ contains(needs.check-version.outputs.version, '-') }}
+          files: |
+            AnimatedDoors_${{ needs.check-version.outputs.version }}.zip
+            AnimatedDoors.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

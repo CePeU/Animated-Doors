@@ -1,0 +1,9 @@
+{
+  "name": "Animated Doors",
+  "unique_id": "AnimatedDoors",
+  "version": "1.0.0",
+  "author": "",
+  "description": "Declare and highlight animated doors, choose automatic hinge axes, integrate with Unofficial Patch's context menu, and export artwork and animation metadata.",
+  "dd_version": "1.2.0.1",
+  "dependencies": []
+}
