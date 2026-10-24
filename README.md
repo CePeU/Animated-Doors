@@ -1,5 +1,5 @@
-﻿![GitHub Downloads (specific asset, latest release)](https://img.shields.io/github/downloads/CePeU/Animated-Doors/latest/Animated-Doors.zip)
-![GitHub Downloads (specific asset, latest release)](https://img.shields.io/github/downloads/CePeU/Animated-Doors/latest/Animated-Doors_1.0.0.zip)
+﻿![GitHub Downloads (specific asset, latest release)](https://img.shields.io/github/downloads/CePeU/Animated-Doors/latest/AnimatedDoors.zip)
+![GitHub Downloads (specific asset, latest release)](https://img.shields.io/github/downloads/CePeU/Animated-Doors/latest/AnimatedDoors_1.0.0.zip)
 
 # Animated Doors
 
