@@ -6,6 +6,30 @@ var saved_filename = ""
 var previous_directory = ""
 var user_cleared_filename = false
 
+func choose_native(extension, description):
+	# Dungeondraft exposes its OS dialog through a custom Godot OS method.
+	# call() keeps this script compatible with the stock test engine.
+	var path = ""
+	var directory = current_dir
+	if directory.begins_with("res://") or directory.begins_with("user://"):
+		directory = ProjectSettings.globalize_path(directory)
+	if OS.get_name() == "X11":
+		var output = []
+		var status = OS.execute("zenity", ["--file-selection", "--save", "--confirm-overwrite", "--title=" + window_title, "--filename=" + directory.plus_file(current_file), "--file-filter=*." + extension], true, output)
+		if status == 0 and not output.empty():
+			path = str(output[0]).strip_edges()
+	elif OS.has_method("show_save_dialog"):
+		path = OS.call("show_save_dialog", window_title, description + " (*." + extension + ")|*." + extension, directory)
+	else:
+		return false
+	if not path.empty():
+		if not path.to_lower().ends_with("." + extension):
+			path += "." + extension
+		current_dir = path.get_base_dir()
+		_file_chosen(path)
+		emit_signal("file_selected", path)
+	return true
+
 func _ready():
 	get_line_edit().connect("text_changed", self, "_filename_changed")
 	connect("about_to_show", self, "_remember_name")

@@ -350,6 +350,10 @@ func collect(map_settings, door_accessor, options):
 		return Geometry.failure("MAP_SETTINGS", map_settings.issue)
 	var raster_only = options.get("raster_only", false)
 	var native = {} if raster_only else host.Exporter.ExportForVTT(options.ppi, null).duplicate(true)
+	if not raster_only and host.has("WorldUI"):
+		# ExportResolution reads cached render fields, which can belong to an
+		# earlier crop. Geometry export itself needs no rendered map image.
+		native.resolution = export_resolution(options.ppi)
 	if options.get("bake", false):
 		return Geometry.success({"native": native, "doors": [], "assets": {}, "visuals": [], "statistics": {"candidates": 0, "declared": 0, "hidden": 0}})
 	var snapshots = []
@@ -452,13 +456,25 @@ func collect(map_settings, door_accessor, options):
 				visuals.append(shadow)
 	return Geometry.success({"native": native, "doors": snapshots, "assets": assets, "visuals": visuals, "statistics": statistics})
 
+func export_resolution(ppi):
+	var origin = Vector2.ZERO
+	var size = property(host.World, "Dimensions", Vector2.ZERO)
+	var ui = host.get("WorldUI")
+	# Nullable<Rect2> does not cross Godot 3's Mono bridge reliably. The host
+	# supplies GetSelectionBox(), returning an empty rectangle when unset.
+	var selection = ui.GetSelectionBox() if is_instance_valid(ui) and ui.has_method("GetSelectionBox") else Rect2()
+	if selection.size.x > 0 and selection.size.y > 0:
+		origin = selection.position / 256.0
+		size = selection.size / 256.0
+	return {"map_origin": Geometry.json_point(origin), "map_size": Geometry.json_point(size), "pixels_per_grid": ppi}
+
 func begin_export(format_script, ppi, quality, render_path):
 	host.Exporter.Mod = format_script
 	host.Exporter.Quality = quality
 	host.Exporter.Start(4, ppi, render_path)
 
 func diagnostic_report(door_accessor = null, map_settings = null):
-	var report = {"engine": Engine.get_version_info(), "mod_version": "0.15.5", "exporter_methods": [], "exporter_signals": [], "assets": [], "selected_ids": selected_assets()}
+	var report = {"engine": Engine.get_version_info(), "mod_version": "1.0.1", "exporter_methods": [], "exporter_signals": [], "assets": [], "selected_ids": selected_assets()}
 	if map_settings != null:
 		report["map_settings"] = map_settings.serialize(null)
 	for entry in host.Exporter.get_method_list():

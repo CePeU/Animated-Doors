@@ -203,5 +203,6 @@
   "Source brightness": "Source brightness",
   "Source focus": "Source focus",
   "Overlay opacity": "Overlay opacity",
-  "Show folder after export": "Show folder after export"
+  "Show folder after export": "Show folder after export",
+  "Cancel export": "Cancel export"
 }

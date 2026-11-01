@@ -13,15 +13,8 @@ func write(path, data, transaction_id):
 func write_image(path, bytes, transaction_id, format):
 	if bytes.size() < 12:
 		return Geometry.failure("IMAGE", "Rendered image is incomplete.")
-	var image = Image.new()
-	var error = ERR_INVALID_DATA
-	if format == "png":
-		error = image.load_png_from_buffer(bytes)
-	elif format == "webp":
-		error = image.load_webp_from_buffer(bytes)
-	elif format == "jpg":
-		error = image.load_jpg_from_buffer(bytes)
-	if error != OK:
+	var size = preload("background_image.gd").inspect(bytes, "image/" + format)
+	if size == Vector2.ZERO:
 		return Geometry.failure("IMAGE", "Rendered image cannot be decoded as " + format)
 	return _write(path, bytes, transaction_id, false)
 

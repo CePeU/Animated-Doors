@@ -1,8 +1,14 @@
+---
+title: Animated Doors
+---
+
 # Animated Doors: User Guide
+
+[Changelog](CHANGELOG.md) · [Export](#1-export-functionality-and-options) · [Doors and menus](#2-working-with-animated-doors-and-the-right-click-menu) · [Settings](#3-animated-doors-settings) · [Levels](#4-level-export--not-yet-functional-in-foundry)
 
 Animated Doors lets you mark Dungeondraft objects and freestanding portals as animated doors, configure their movement, preview them, and export their artwork and settings in a Universal VTT (`.dd2vtt`) file.
 
-This guide covers version **0.15.8**. Control names below use the English interface; the mod also supports German. `_Lib` and Unofficial Patch are optional. Without them, Animated Doors provides its own settings and right-click menu.
+This guide covers version **1.0.1**. Control names below use the English interface; the mod also supports German. `_Lib` and Unofficial Patch are optional. Without them, Animated Doors provides its own settings and right-click menu.
 
 To install, extract the `AnimatedDoors` folder into your Dungeondraft mods directory, enable the mod, and reopen your map. The resulting path should be `mods/AnimatedDoors/mod.ddmod`. Save your map normally to retain door assignments and map-specific settings.
 
@@ -28,7 +34,7 @@ Raster exports produce an image, not interactive doors. Universal VTT is the opt
 | Control | What it does |
 | --- | --- |
 | **Multi file / Mehrere Dateien** | Directly below the output-format dropdown. ON writes each enabled level as a separate UVTT/PNG/JPG/WebP file, using the chosen filename prefix and sanitized level names in the chosen directory. UVTT files share `multi_file`, `map_name`, and `export_timestamp` under `Levels` and contain only their own map. |
-| **Include map image** | Universal VTT only. ON includes the background image. OFF omits the image while retaining map geometry, lighting data and separate animated-door data. Defaults to ON. |
+| **Include map image** | Universal VTT only. ON includes the background image. OFF exports walls, lights, portals and separate animated-door data directly, without rendering or allocating a map image. Works with or without declared animated doors and respects the current crop. Defaults to ON. |
 | **Export mode** | Selects the Universal VTT background format: PNG, JPG or WebP. This is independent of the separate door-image format. Disabled when the map image is omitted. |
 | **Include animated doors in map image** | ON bakes declared door artwork into the map image. OFF removes declared door artwork and its separate shadow sprites from that image so it can be supplied separately. Defaults to OFF. In raster exports, this decides whether the declared doors appear in the image. |
 | **Embed door assets in UVTT (Base64)** | With baking OFF, ON includes the required door-image files inside the `.dd2vtt` file. OFF writes asset references and hashes instead; the receiving application must obtain the matching images separately. Defaults to OFF. |
@@ -73,13 +79,17 @@ For **Door asset format**, Original format keeps eligible PNG/WebP originals whe
 2. For a single-level export, select the level currently being edited as **Source Level**. Set **Overlay Level** to None and turn off level comparison.
 3. Choose the format and Animated Doors options above.
 4. Choose a full-map export or a rectangular crop. Use a resolution of **1–300 pixels per grid**; fixed 1080p output is unsupported by this export workflow.
-5. Click **Export**, choose a destination, and wait for the saved-file confirmation.
+5. Click **Export**, choose the filename and destination in the native OS save dialog, and wait for the saved-file confirmation. The extension follows the selected format. Cancelling the save dialog starts no export.
 
 The native grid, lighting, camera-filter, crop and resolution controls still determine the map image. Additional controls supplied by other mods retain their own functions.
 
 All declared, visible supported doors on the source level are considered, regardless of the Animated Doors list filter. Turning editing or the overview off does not exclude doors from export. Hidden artwork is not exported as a visible animated door. Maps without declared doors can also be exported.
 
-During export, editing overlays are hidden and the artwork is temporarily prepared for capture. The mod restores the artwork and selection afterwards. To cancel an active capture, choose **Discard result when rendering finishes** and allow native rendering to finish. A failed or cancelled batch does not replace the destination with a partial result.
+When a map image is included, editing overlays are hidden and the artwork is temporarily prepared for capture. The mod restores the artwork and selection afterwards. To cancel an active capture, choose **Cancel export / Export abbrechen** and allow native rendering to finish. This button label is not an error message. With **Include map image** OFF, the mod exports the data directly and skips capture entirely.
+
+A combined UVTT destination is replaced only after all levels succeed. In separate-file mode, files already saved remain if a later level fails or is cancelled. Existing destinations are preserved when the batch overwrite prompt is cancelled.
+
+For large maps, PNG/JPG backgrounds above 16,384 pixels per side are checked using their original encoded dimensions instead of loading them into Godot. Native rendering and JSON assembly still require enough memory. WebP retains its codec limits. If you only need walls, lights and doors, turn **Include map image** OFF to avoid rendering the background.
 
 ### If the compact export controls are unavailable
 
@@ -293,4 +303,4 @@ Elevation values support undo/redo, follow their level through renaming/reorderi
 
 Each included level exports its own name, bounds, geometry, lighting and door data, plus its image if requested. The export dialog's image, baking, embedding and door-format choices apply to all included levels. After export, the original editor/source level is restored. The combined destination is written only after every included level succeeds.
 
-For the technical file structure, see the [export contract](export-contract.md). Foundry importer changes are still required before these multi-level exports can be used there as intended.
+Foundry importer changes are still required before these multi-level exports can be used there as intended. Technical export contracts and test reports are maintained separately in the source project.

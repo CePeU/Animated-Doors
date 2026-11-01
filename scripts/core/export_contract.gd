@@ -4,7 +4,7 @@ const Geometry = preload("door_geometry.gd")
 const Matcher = preload("portal_matcher.gd")
 const Encoder = preload("asset_encoder.gd")
 const Prepared = preload("prepared_texture.gd")
-const VERSION = "0.15.8"
+const VERSION = "1.0.1"
 const Metadata = preload("asset_metadata.gd")
 const Crop = preload("crop_geometry.gd")
 const Component = preload("door_component.gd")
@@ -368,12 +368,11 @@ static func _validate_envelope(data, mime, verify_images):
 		var bytes = Marshalls.base64_to_raw(data.image)
 		if Marshalls.raw_to_base64(bytes) != data.image:
 			return _bad("image", "Invalid Base64")
-		var image = Image.new()
-		var error = image.load_png_from_buffer(bytes) if mime == "image/png" else (image.load_jpg_from_buffer(bytes) if mime in ["image/jpg", "image/jpeg"] else image.load_webp_from_buffer(bytes))
-		if error != OK:
+		var size = preload("background_image.gd").inspect(bytes, mime)
+		if size == Vector2.ZERO:
 			return _bad("image", "Background cannot be decoded")
 		var expected = Geometry.vector(resolution.map_size) * resolution.pixels_per_grid
-		if abs(image.get_width()-expected.x)>1.0 or abs(image.get_height()-expected.y)>1.0:
+		if abs(size.x-expected.x)>1.0 or abs(size.y-expected.y)>1.0:
 			return _bad("resolution", "Background dimensions disagree with grid resolution")
 	return Geometry.success(true)
 

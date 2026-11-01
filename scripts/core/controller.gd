@@ -416,6 +416,7 @@ func _install_export_controls():
 	file_dialog.access = FileDialog.ACCESS_FILESYSTEM
 	file_dialog.filters = PoolStringArray(["*.dd2vtt ; Universal VTT with Animated Doors"])
 	file_dialog.window_title = "Export Animated Doors"
+	file_dialog.current_dir = OS.get_system_dir(OS.SYSTEM_DIR_PICTURES)
 	win.add_child(file_dialog)
 	file_dialog.connect("file_selected", self, "_file_selected")
 	overwrite_dialog = ConfirmationDialog.new()
@@ -433,7 +434,7 @@ func _install_export_controls():
 	busy_label.text = L.text("Preparing animated doors...")
 	content.add_child(busy_label)
 	var cancel = Button.new()
-	cancel.text = "Discard result when rendering finishes"
+	cancel.text = "Cancel export"
 	content.add_child(cancel)
 	cancel.connect("pressed", self, "_cancel")
 	win.add_child(busy_dialog)
@@ -582,7 +583,8 @@ func _choose_file():
 	var basename = file_dialog.saved_filename.get_basename() if not file_dialog.saved_filename.empty() else "animated-map"
 	file_dialog.current_file = basename + "." + spec.extension
 	L.apply_tree(file_dialog)
-	file_dialog.popup_centered_ratio(0.7)
+	if not file_dialog.choose_native(spec.extension, L.text(description)):
+		file_dialog.popup_centered_ratio(0.7)
 
 func _file_selected(path):
 	if overwrite_pending:
@@ -637,7 +639,7 @@ func _file_selected(path):
 	if not collected.ok:
 		_finish_error(collected.message)
 		return
-	if collected.value.doors.empty() and not spec.raster and not spec.get("integrated", false):
+	if collected.value.doors.empty() and not spec.raster and not spec.get("integrated", false) and spec.get("include_image", true):
 		busy_dialog.hide()
 		_message("No visible animated doors: %s candidate assets, %s declared, %s hidden. Enable animated door editing, select an asset with the Select tool, right-click, and choose Declare Animated Door. Layers only filter the list." % [collected.value.statistics.candidates, collected.value.statistics.declared, collected.value.statistics.hidden])
 		return
@@ -661,6 +663,11 @@ func _file_selected(path):
 	var prepared = transaction.prepare(context, collected.value.visuals, render_path)
 	if not prepared.ok:
 		_finish_error(prepared.message)
+		return
+	if not spec.raster and not spec.get("include_image", true):
+		# No renderer, temporary image, visual suppression or frame wait needed.
+		transaction.state = "ASSEMBLING"
+		call_deferred("_complete")
 		return
 	_hide_overlays()
 	var selection_hidden = adapter.suspend_export_selection()
@@ -738,6 +745,11 @@ func _tick():
 		_refresh()
 
 func _complete():
+	if transaction.state == "IDLE" or stopped:
+		return
+	if transaction.cancelled:
+		_finish_error("Export discarded. The previous destination was preserved.")
+		return
 	transaction.state = "ASSEMBLING"
 	transaction.restore_visuals()
 	busy_label.text = L.text("Validating and saving export...")
@@ -761,9 +773,10 @@ func _complete():
 	var native = snapshot.native
 	for field in snapshot.get("level_metadata", {}):
 		native[field] = snapshot.level_metadata[field]
-	# exportOrigin/exportSize are initialized by native capture, not by the
-	# preceding options dialog. Read them now, after native capture has ended.
-	native.resolution = host.Exporter.ExportResolution(snapshot.ppi).duplicate(true)
+	# Rendered exports use the host's actual capture bounds. Metadata exports
+	# retain the fresh bounds collected directly from WorldUI, without capture.
+	if spec.get("include_image", true):
+		native.resolution = host.Exporter.ExportResolution(snapshot.ppi).duplicate(true)
 	native.image = Marshalls.raw_to_base64(transaction.image_bytes) if spec.get("include_image", true) else ""
 	if spec.get("bake", false):
 		Contract.mark_unanimated_portals(native)

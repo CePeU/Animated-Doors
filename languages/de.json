@@ -203,5 +203,6 @@
   "Source brightness": "Helligkeit der Quellebene",
   "Source focus": "Fokus der Quellebene",
   "Overlay opacity": "Deckkraft der Überlagerungsebene",
-  "Show folder after export": "Ordner nach dem Export anzeigen"
+  "Show folder after export": "Ordner nach dem Export anzeigen",
+  "Cancel export": "Export abbrechen"
 }
