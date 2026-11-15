@@ -1,4 +1,4 @@
-﻿![GitHub Downloads (specific asset, latest release)](https://img.shields.io/github/downloads/CePeU/Animated-Doors/latest/AnimatedDoors_1.0.1.zip)
+﻿![GitHub Downloads (specific asset, latest release)](https://img.shields.io/github/downloads/CePeU/Animated-Doors/latest/AnimatedDoors_1.0.2.zip)
 
 ![Total Module Downloads (All Versions)](https://img.shields.io/github/downloads/CePeU/Animated-Doors/AnimatedDoors.zip?label=Total%20Module%20Downloads&color=blue&displayAssetName=false)
 
