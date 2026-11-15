@@ -1411,7 +1411,8 @@ class SettingsRecord:
 		if controller != null:
 			controller.apply_history(changes, "after", generation)
 
-func _stop_artwork():
+# Native OnSaveBegin passes (path, isBackingUp); mod signals/direct calls do not.
+func _stop_artwork(_path = null, _is_backing_up = null):
 	if is_instance_valid(artwork_preview):
 		artwork_preview.cancel()
 

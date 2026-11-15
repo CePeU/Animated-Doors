@@ -474,7 +474,7 @@ func begin_export(format_script, ppi, quality, render_path):
 	host.Exporter.Start(4, ppi, render_path)
 
 func diagnostic_report(door_accessor = null, map_settings = null):
-	var report = {"engine": Engine.get_version_info(), "mod_version": "1.0.1", "exporter_methods": [], "exporter_signals": [], "assets": [], "selected_ids": selected_assets()}
+	var report = {"engine": Engine.get_version_info(), "mod_version": "1.0.2", "exporter_methods": [], "exporter_signals": [], "assets": [], "selected_ids": selected_assets()}
 	if map_settings != null:
 		report["map_settings"] = map_settings.serialize(null)
 	for entry in host.Exporter.get_method_list():

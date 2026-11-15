@@ -113,7 +113,8 @@ class Components:
 				accessor.values[accessor.key(node)] = factory.deserialize(node, entry.data)
 		accessors[identifier] = accessor
 		return accessor
-	func flush():
+	# Native OnSaveBegin passes two arguments; visibility_changed/direct calls do not.
+	func flush(_path = null, _is_backing_up = null):
 		var saved = table()
 		for identifier in accessors:
 			saved[identifier] = accessors[identifier].serialize()

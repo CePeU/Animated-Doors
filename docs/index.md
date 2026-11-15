@@ -4,15 +4,19 @@ title: Animated Doors
 
 # Animated Doors: User Guide
 
-[Changelog](CHANGELOG.md) · [Export](#1-export-functionality-and-options) · [Doors and menus](#2-working-with-animated-doors-and-the-right-click-menu) · [Settings](#3-animated-doors-settings) · [Levels](#4-level-export--not-yet-functional-in-foundry)
+[Changelog](CHANGELOG.md) · [Export](#1-export-functionality-and-options) · [Doors and menus](#2-working-with-animated-doors-and-the-right-click-menu) · [Settings](#3-animated-doors-settings) · [Levels](#4-level-export-and-foundry-v13-import)
 
 Animated Doors lets you mark Dungeondraft objects and freestanding portals as animated doors, configure their movement, preview them, and export their artwork and settings in a Universal VTT (`.dd2vtt`) file.
 
-This guide covers version **1.0.1**. Control names below use the English interface; the mod also supports German. `_Lib` and Unofficial Patch are optional. Without them, Animated Doors provides its own settings and right-click menu.
+This guide covers version **1.0.2**. Control names below use the English interface; the mod also supports German. `_Lib` and Unofficial Patch are optional. Without them, Animated Doors provides its own settings and right-click menu.
 
 To install, extract the `AnimatedDoors` folder into your Dungeondraft mods directory, enable the mod, and reopen your map. The resulting path should be `mods/AnimatedDoors/mod.ddmod`. Save your map normally to retain door assignments and map-specific settings.
 
-**Foundry compatibility:** exporting data does not guarantee that the installed Foundry importer understands it. The current exporter uses a newer format than the existing separate importer. In particular, the level-export workflow described in section 4 is **not yet functional in Foundry** and requires an importer update.
+Saving, including automatic backups, stops any running artwork preview and
+restores the original door artwork. Pending door and map settings are written
+before the save. No additional setting is required.
+
+**Foundry compatibility:** the separate Foundry v13 importer update (1.1.1) supports current schema-10 exports and the level workflow in section 4. Multi-level imports require the Levels and Wall Height modules. This is a local integration build with automated tests; live canvas acceptance is still pending. Older installed importers do not gain this support automatically.
 
 ## 1. Export functionality and options
 
@@ -39,7 +43,7 @@ Raster exports produce an image, not interactive doors. Universal VTT is the opt
 | **Include animated doors in map image** | ON bakes declared door artwork into the map image. OFF removes declared door artwork and its separate shadow sprites from that image so it can be supplied separately. Defaults to OFF. In raster exports, this decides whether the declared doors appear in the image. |
 | **Embed door assets in UVTT (Base64)** | With baking OFF, ON includes the required door-image files inside the `.dd2vtt` file. OFF writes asset references and hashes instead; the receiving application must obtain the matching images separately. Defaults to OFF. |
 | **Door asset format** | Chooses Original format, PNG or WebP for separate door images. Does not change the map background format. Disabled for baked UVTT and hidden for raster exports. |
-| **Export levels** | Includes the selected levels in one UVTT file. Defaults to OFF. See section 4 for ordering, selection and the pending Foundry importer support. |
+| **Export levels** | Includes the selected levels in one UVTT file. Defaults to OFF. See section 4 for ordering, selection and Foundry v13 import. |
 
 The chosen save filename is a prefix: `Test_.dd2vtt` with levels `Ground` and
 `Dach` writes `Test_Ground.dd2vtt` and `Test_Dach.dd2vtt` to that directory.
@@ -256,9 +260,12 @@ The **Menu order** group controls individual commands and submenu groups. Lower 
 
 Use **Write diagnostic report** in the panel when reporting an issue. It writes a report and displays its location. The report contains settings, selected asset IDs and geometry information, but no embedded images. Review it before sharing it.
 
-## 4. Level export — NOT YET FUNCTIONAL IN FOUNDRY
+## 4. Level export and Foundry v13 import
 
-**Status: the Dungeondraft export is implemented, but the Foundry importer still needs to be adjusted. This is not yet an end-to-end functional level workflow in Foundry.** The options below describe how to prepare and export level data; do not expect the existing importer to create or configure these levels correctly yet.
+The separate v13 importer update supports combined and ordered separate level files.
+Install the local importer build described below before using this workflow; older
+importers may not understand current Animated Doors exports. Automated tests cover
+the data conversion; live Foundry rendering and token vision still need acceptance.
 
 ### Select which levels to export
 
@@ -303,4 +310,53 @@ Elevation values support undo/redo, follow their level through renaming/reorderi
 
 Each included level exports its own name, bounds, geometry, lighting and door data, plus its image if requested. The export dialog's image, baking, embedding and door-format choices apply to all included levels. After export, the original editor/source level is restored. The combined destination is written only after every included level succeeds.
 
-Foundry importer changes are still required before these multi-level exports can be used there as intended. Technical export contracts and test reports are maintained separately in the source project.
+### Import into Foundry v13
+
+The local importer source is in
+`integrations/FVTT-UVTT-Animated-Doors-importer-v13-main` in the project repository.
+Build its separate ZIP with `python tools/package_foundry_v13_importer.py`, then
+extract `dist/dd-import-ad-v13-1.1.1.zip` into a test Foundry User Data `modules`
+folder. Enable the importer, **Levels** and **Wall Height**. This integration
+uses the v13.351 / Levels 6.1.0 / Wall Height 7.0.8 fields. It is not included in
+the Dungeondraft mod ZIP and has not been installed into an existing world.
+
+1. For separate interactive doors, turn baking OFF and **Embed door assets in
+   UVTT (Base64)** ON before exporting. The initial door-embedding default is OFF,
+   so change it explicitly unless the finished assets already exist in Foundry.
+2. In Foundry's Scenes sidebar, open **AD Universal Battlemap Import**. Choose a
+   writable upload path and **Levels (bottom to top)** as Import Layout.
+3. Select one combined UVTT, or enable **Allow multiple files** and use **Add another
+   file** to choose each separate floor in order: bottom first, highest last.
+4. Submit the form. Each submission creates one new scene. Select floors using
+   the Levels UI and test with a token at the corresponding elevation.
+
+Combined UVTT uses the root map followed by numbered Levels entries. Exported
+Bottom/Top values are retained when configured; if all levels still use 0/0,
+**Starting elevation** (default 0) and **Level height** (default 10) generate
+0–9, 10–19, 20–29, etc. Separate files always use their displayed import order
+and these controls, overriding stored elevation values. Starting elevation is a
+signed integer; height must be an integer of at least 2. Combined ranges must
+ascend without overlap and each stacked floor must have Top greater than Bottom.
+Do not mix a combined file with additional files in one import.
+
+Every level gets its own floor image, walls, doors and lights. Different crop
+origins align in a shared scene. Empty, omitted or null background images produce a warning and import without floor artwork. Configure
+stairs, holes, roofs and elevation-changing actions manually; UVTT does not
+provide enough information to infer them. Further imports create new scenes
+rather than appending to existing ones.
+
+**Convert to WebP** initially defaults ON; disable it for very large backgrounds
+to upload original PNG/JPG/WebP bytes without a large browser canvas. For exports
+below 50 pixels per grid, enable **Set Custom Grid PPI** and choose at least 50.
+Door asset images retain their prepared thickness and are not processed again.
+
+Reference-only doors require exact finished images already registered in the
+world or available under their exported filenames in the configured door asset
+folder. Missing door images produce warnings: affected doors import without artwork
+or animation while retaining geometry, type and open/locked state. Other doors
+keep their available artwork. Mismatched hashes still stop the import. Prefer
+embedding for a first import. Sheared doors and older custom Animated Doors schemas are rejected
+with an error; re-export old files. Uploads can remain if a later step fails.
+
+The importer README contains full controls, installation and validation details.
+Technical export contracts and test reports remain separate from this user guide.

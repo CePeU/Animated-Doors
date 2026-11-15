@@ -12,6 +12,12 @@ history. Entries describe the behavior of their release; later changes supersede
 older options and data formats. Separate Foundry integration work is identified
 explicitly and is not automatically installed with this mod.
 
+## [1.0.2] / 2026-11-15
+
+### Fixed
+
+- Dungeondraft's save-begin signal now stops artwork previews and flushes pending standalone settings for normal saves and automatic backups, without callback argument-count errors. Parameterless mod signals and direct calls remain supported.
+
 ## [1.0.1] / 2026-11-01
 
 ### Changed
